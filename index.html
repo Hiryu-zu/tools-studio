@@ -28,6 +28,16 @@
   }
   a.card:active{transform:scale(.985);}
   a.card:hover{border-color:var(--accent);}
+  a.finds{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    text-decoration:none; color:inherit; margin-bottom:18px;
+    background:#141a24; border:1px dashed var(--line); border-radius:14px; padding:14px 16px;
+    transition:border-color .12s ease;
+  }
+  a.finds:hover{border-color:var(--accent);}
+  a.finds .ftxt{font-size:.92rem;}
+  a.finds .fsub{display:block; color:var(--sub); font-size:.76rem; margin-top:3px;}
+  a.finds .farrow{color:var(--accent); font-size:1.1rem;}
   .card h2{margin:0 0 6px; font-size:1.1rem; display:flex; align-items:center; gap:10px;}
   .card p{margin:0; color:var(--sub); font-size:.86rem; line-height:1.5;}
   .ico{font-size:1.25rem; line-height:1;}
@@ -45,6 +55,10 @@
   <p>スマホからそのまま動かせる成果物の一覧</p>
 </header>
 <main>
+  <a class="finds" href="./gallery/">
+    <span class="ftxt">🔎 見つけたもの（外部サイト/ツール）<span class="fsub">調べて気になった動くサイト・ユニークツールのメモ</span></span>
+    <span class="farrow">→</span>
+  </a>
   <div class="grid">
 
     <a class="card" href="./sites/star-trail/">

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>見つけたもの — Webサイト/ツール ギャラリー</title>
+<style>
+  :root{
+    --bg:#0e1116; --card:#181d26; --card2:#1f2633;
+    --text:#e8edf4; --sub:#9aa7b8; --accent:#5db0ff; --line:#2a3140;
+    --chip:#243042; --link:#7cc4ff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    background:radial-gradient(1200px 600px at 50% -10%,#1a2333,#0e1116 60%);
+    color:var(--text); -webkit-font-smoothing:antialiased; min-height:100vh;
+  }
+  header{padding:32px 20px 8px; text-align:center;}
+  .back{display:inline-block; color:var(--sub); text-decoration:none; font-size:.82rem; margin-bottom:10px;}
+  .back:hover{color:var(--accent);}
+  h1{font-size:1.4rem; margin:0 0 6px; letter-spacing:.02em;}
+  header p{margin:0 auto; max-width:560px; color:var(--sub); font-size:.86rem; line-height:1.6;}
+  main{max-width:760px; margin:0 auto; padding:12px 16px 56px;}
+  .cat{margin:26px 0 12px; font-size:.95rem; color:var(--accent); display:flex; align-items:center; gap:8px;}
+  .cat::after{content:""; flex:1; height:1px; background:var(--line);}
+  .grid{display:grid; gap:12px;}
+  .card{
+    background:linear-gradient(160deg,var(--card),var(--card2));
+    border:1px solid var(--line); border-radius:14px; padding:16px 16px;
+  }
+  .card h3{margin:0 0 6px; font-size:1.02rem;}
+  .card p{margin:0 0 10px; color:var(--sub); font-size:.85rem; line-height:1.55;}
+  .chips{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;}
+  .chip{font-size:.68rem; color:#bcd2ea; background:var(--chip); border-radius:999px; padding:3px 9px;}
+  .links{display:flex; flex-wrap:wrap; gap:8px;}
+  .links a{
+    display:inline-flex; align-items:center; gap:6px; text-decoration:none;
+    color:var(--link); font-size:.8rem; border:1px solid var(--line);
+    border-radius:8px; padding:6px 11px; background:#0e131b;
+  }
+  .links a:hover{border-color:var(--accent); color:#fff;}
+  .links a::after{content:"↗"; font-size:.72rem; opacity:.7;}
+  .nolink{font-size:.74rem; color:#6f7c8d; font-style:italic;}
+  footer{text-align:center; color:var(--sub); font-size:.74rem; padding:8px 20px 40px; line-height:1.7;}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../">← ツール集トップへ戻る</a>
+  <h1>🔎 見つけたもの</h1>
+  <p>調べて気になった「動くWebサイト・ユニークツール」のメモ。リンクのあるものはタップすると実際のサイトへ移動します（外部サイト・別タブで開きます）。</p>
+</header>
+<main id="app"></main>
+<footer>
+  出典: 自分の情報収集メモより。内容は調査時点のもので、リンク先の状態は変わる場合があります。<br>
+  新しく見つけたら情報収集で調べて、このギャラリーに1枚追記。
+</footer>
+
+<script>
+const DATA = [
+  {
+    cat: "🎨 画像・エフェクト（ブラウザ完結）",
+    items: [
+      {
+        name: "画像グリッチ / ひび割れ加工ツール",
+        desc: "AMIXの「IMG Breaker」や「画像をバキバキに割るツール」が参考。Canvas+JSで画像をスライスしてランダムにズラす/回転。スライダー調整→PNG書き出しまで静的HTML1枚で作れそう。",
+        chips: ["Canvas", "画像加工", "自作向き"],
+        links: [
+          { label: "IMG Breaker", url: "https://amix-design.com/news-111-85407.html" },
+          { label: "AMIX tools", url: "https://amix-design.com/tools" }
+        ]
+      },
+      {
+        name: "水面リップル / 流体の背景エフェクト",
+        desc: "jQuery RipplesやWebGL Waterが参考。ポートフォリオやLPの背景に「マウスで波紋が広がる」WebGLシェーダーを組み込む。（※自分でも実装済み）",
+        chips: ["WebGL", "背景演出"],
+        links: [
+          { label: "コリス解説", url: "https://coliss.com/articles/build-websites/operation/javascript/jquery-plugin-ripples.html" }
+        ]
+      },
+      {
+        name: "VFX用メッシュ生成ツール（Effect Mesh Generator）",
+        desc: "スラッシュ/衝撃波/リボン型メッシュをスライダーで作りOBJ出力。MITライセンスでソース公開。UI改善やFBX出力対応を足して作り直す余地あり。",
+        chips: ["OSS", "MIT", "3D/VFX"],
+        links: [
+          { label: "Effect Mesh Generator", url: "https://big615big615.github.io/EffectMeshGenerator/" }
+        ]
+      },
+      {
+        name: "雑誌風レイアウト / 高速テキスト表示の実験（Pretext.js）",
+        desc: "15KBでDOM reflowなしのテキスト計測ライブラリ。無限スクロールや段組みレイアウトを試すデモページに使える。",
+        chips: ["ライブラリ", "タイポグラフィ"],
+        links: [
+          { label: "pretextjs.dev", url: "https://pretextjs.dev/" }
+        ]
+      }
+    ]
+  },
+  {
+    cat: "🗣️ AIキャラクター・音声系",
+    items: [
+      {
+        name: "ローカルTTS+チャットの「話すAIアシスタント」",
+        desc: "Irodori-TTS v3とClaude Code/CodexのCLI出力を繋ぎ、返答を感情付き音声で再生するローカルアプリ。まずはテキスト→音声再生のミニアプリから。表情/アバターは後付け可能。",
+        chips: ["ローカル", "TTS", "AI"],
+        links: [
+          { label: "Irodori-TTS (GitHub)", url: "https://github.com/Aratako/Irodori-TTS" }
+        ]
+      },
+      {
+        name: "AI人格の「自己観測・記録」ダッシュボード",
+        desc: "Hermes＋Obsidian連携のように、AIエージェントの作業ログ・メモリをObsidian Vault形式で蓄積し関連グラフを可視化するローカルWebビュー。既存の情報収集/research構成がそのまま使える。",
+        chips: ["Obsidian", "可視化", "ローカル"],
+        links: []
+      }
+    ]
+  },
+  {
+    cat: "🤖 情報収集・自動化（自分用Webツール）",
+    items: [
+      {
+        name: "「いいね収集→要約→Todo化」パイプラインのWeb化",
+        desc: "今のX Likes収集＋Jina Reader資料化の手順をn8nのワークフローに移植。X/note/Qiitaから定時収集→Gemini/Claudeで要約・分類→Discordやローカルへ通知という構成。",
+        chips: ["n8n", "自動化", "ワークフロー"],
+        links: [
+          { label: "n8n.io", url: "https://n8n.io/" }
+        ]
+      },
+      {
+        name: "Markdown資料から確認用Webアプリを自動生成",
+        desc: "既存テンプレートを使い、todo-localと同じ構成（index.html/styles.css/app.js/data.js）で、調査結果や計画Markdownを一覧・絞り込み・詳細表示できる静的Webアプリに。ローカル確認用の第一歩として着手しやすい。",
+        chips: ["静的Web", "ローカル", "着手しやすい"],
+        links: []
+      }
+    ]
+  },
+  {
+    cat: "🛠️ クリエイティブ制作支援",
+    items: [
+      {
+        name: "TRPGマップエディタの自分用カスタム版",
+        desc: "「違法建築のTRPGラボ」のマップエディタ（ブラウザ完結・square/hex対応・PNG/SVG出力）が参考。使いたいテクスチャやスタンプだけ入れた軽量版を作る。",
+        chips: ["ブラウザ完結", "エディタ"],
+        links: [
+          { label: "TRPG Map Maker", url: "https://ihoukentiku.github.io/trpg_map_maker/map_list.html" }
+        ]
+      },
+      {
+        name: "1枚画像→3Dモデル化ワークフローのまとめページ",
+        desc: "Meshy 6での3Dモデル生成手順を、「画像アップロード→Meshy/他ツールへのリンク→Blender読み込みチェックリスト」のステップガイドWebページにまとめる。",
+        chips: ["3D", "ガイド", "Meshy"],
+        links: []
+      }
+    ]
+  },
+  {
+    cat: "🧩 開発支援・コード可視化",
+    items: [
+      {
+        name: "コード依存関係グラフのローカル可視化（CodeGraphContext）",
+        desc: "MCPサーバー＋CLIで、ローカルコードをグラフDB化しダークモード/glassmorphismの対話的グラフで表示。自分のプロジェクトの依存関係確認用Webビューとして導入。",
+        chips: ["MCP", "可視化", "ローカル"],
+        links: [
+          { label: "codegraphcontext.github.io", url: "https://codegraphcontext.github.io/" }
+        ]
+      },
+      {
+        name: "AIエージェント用UIデザインSkillの自作",
+        desc: "「UIスキル集」の考え方を参考に、Claude Code/Codexに渡す独自のSKILL.md（配色・タイポ・余白ルール）を作り、生成されるWeb UIの「AIっぽさ」を減らす。",
+        chips: ["Skill", "デザイン", "AI"],
+        links: []
+      }
+    ]
+  },
+  {
+    cat: "🌌 没入型・体験型Web表現",
+    items: [
+      {
+        name: "WebGPU物理シミュレーションのインタラクティブLP",
+        desc: "パーティクルや布シミュレーションをWebGPUで動かし、トップページの演出に使う。スマホ対応とパフォーマンスのバランスは要検証。",
+        chips: ["WebGPU", "物理", "演出"],
+        links: []
+      },
+      {
+        name: "曇りガラスUI（glassmorphism）のポートフォリオ",
+        desc: "曇りガラスUIや流体インク表現を組み合わせた、自己紹介・作品集ページのデザイン実験。",
+        chips: ["glassmorphism", "デザイン実験"],
+        links: []
+      }
+    ]
+  }
+];
+
+const app = document.getElementById('app');
+DATA.forEach(group => {
+  const h = document.createElement('h2');
+  h.className = 'cat';
+  h.textContent = group.cat;
+  app.appendChild(h);
+
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+
+  group.items.forEach(it => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const title = document.createElement('h3');
+    title.textContent = it.name;
+    card.appendChild(title);
+
+    const p = document.createElement('p');
+    p.textContent = it.desc;
+    card.appendChild(p);
+
+    if (it.chips && it.chips.length) {
+      const chips = document.createElement('div');
+      chips.className = 'chips';
+      it.chips.forEach(c => {
+        const s = document.createElement('span');
+        s.className = 'chip';
+        s.textContent = c;
+        chips.appendChild(s);
+      });
+      card.appendChild(chips);
+    }
+
+    const links = document.createElement('div');
+    links.className = 'links';
+    if (it.links && it.links.length) {
+      it.links.forEach(l => {
+        const a = document.createElement('a');
+        a.href = l.url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.textContent = l.label;
+        links.appendChild(a);
+      });
+    } else {
+      const span = document.createElement('span');
+      span.className = 'nolink';
+      span.textContent = 'リンクなし（メモのみ）';
+      links.appendChild(span);
+    }
+    card.appendChild(links);
+
+    grid.appendChild(card);
+  });
+
+  app.appendChild(grid);
+});
+</script>
+</body>
+</html>
