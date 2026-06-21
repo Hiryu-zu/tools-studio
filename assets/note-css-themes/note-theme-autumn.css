@@ -1,0 +1,136 @@
+/* =========================================================
+   note.com 自作テーマ ／ 秋テーマ：紅葉読書室（もみじどくしょしつ）
+   ---------------------------------------------------------
+   コンセプト：生成りの紙・鮮やかな紅葉（もみじ）・夕方・読書室。
+   用途    ：読書メモ・文学的問い・レビュー・内省系記事。
+   使い方  ：Stylus に貼り付け、適用先を note.com に設定。
+   ---------------------------------------------------------
+   ■色は :root の変数 ／ 模様の濃さ=--pattern-opacity（0で消える）
+     模様の大きさ=--pattern-size
+   ■模様は初期状態で「具体的なSVG絵柄（紅葉（もみじ））」が有効です。
+     軽量な抽象版に戻したい場合は body::before の【A】【B】を切替。
+   ========================================================= */
+
+:root {
+  --bg-main:    #fbefd9;  /* 背景色（ページ全体） */
+  --bg-paper:   #fffbf2;  /* 本文カード色（記事エリア） */
+  --bg-soft:    #f2dcbb;  /* 補助背景色 */
+  --text-main:  #36261a;  /* 本文文字色（薄くしすぎ注意） */
+  --text-sub:   #8a6a48;  /* サブ文字色 */
+  --accent:     #d2541f;  /* リンク・アクセント色 */
+  --accent-soft:#eab873;  /* 淡いアクセント */
+  --border-soft:#e7cfa8;  /* 枠線色 */
+  --h-color:    #b8431a;  /* 見出し色（コントラスト確保） */
+  --link:       #b8431a;  /* リンク色（AA基準を満たす濃いめ） */
+
+  --pattern-opacity: 0.85;  /* 模様の濃さ 0=消える */
+  --pattern-size: 175px 175px;  /* 模様タイルの大きさ */
+}
+
+html,
+body {
+  background-color: var(--bg-main) !important;
+  color: var(--text-main) !important;
+}
+
+/* =========================================================
+   模様レイヤー（【A】【B】はどちらか一方だけ有効に）
+   初期状態：【A】具体的SVG版が有効 ／ 【B】抽象CSS版はコメントアウト
+   ========================================================= */
+
+/* 【A】具体的SVG版（紅葉（もみじ））★初期有効★ -------------- */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: var(--pattern-opacity);
+
+  background-color: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'175'%20height%3D'175'%20viewBox%3D'0%200%20175%20175'%3E%3Cg%20transform%3D'translate%2846%2C48%29%20rotate%2812%29%20scale%281.05%29'%3E%3Cpath%20d%3D'M0%2012%20L-5%207%20L-18%203%20L-7%20-2%20L-16%20-13%20L-5%20-10%20L0%20-23%20L5%20-10%20L16%20-13%20L7%20-2%20L18%203%20L5%207%20Z'%20fill%3D'%23cf2f18'%20fill-opacity%3D'0.34'%2F%3E%3Cpath%20d%3D'M0%2012%20L0%2018'%20stroke%3D'%23cf2f18'%20stroke-opacity%3D'0.34'%20stroke-width%3D'1.4'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate%28128%2C118%29%20rotate%28-26%29%20scale%280.85%29'%3E%3Cpath%20d%3D'M0%2012%20L-5%207%20L-18%203%20L-7%20-2%20L-16%20-13%20L-5%20-10%20L0%20-23%20L5%20-10%20L16%20-13%20L7%20-2%20L18%203%20L5%207%20Z'%20fill%3D'%23b8281a'%20fill-opacity%3D'0.3'%2F%3E%3Cpath%20d%3D'M0%2012%20L0%2018'%20stroke%3D'%23b8281a'%20stroke-opacity%3D'0.3'%20stroke-width%3D'1.4'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate%28150%2C42%29%20rotate%28160%29%20scale%280.62%29'%3E%3Cpath%20d%3D'M0%2012%20L-5%207%20L-18%203%20L-7%20-2%20L-16%20-13%20L-5%20-10%20L0%20-23%20L5%20-10%20L16%20-13%20L7%20-2%20L18%203%20L5%207%20Z'%20fill%3D'%23d83a1c'%20fill-opacity%3D'0.26'%2F%3E%3Cpath%20d%3D'M0%2012%20L0%2018'%20stroke%3D'%23d83a1c'%20stroke-opacity%3D'0.26'%20stroke-width%3D'1.4'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate%2850%2C134%29%20rotate%28-8%29%20scale%280.72%29'%3E%3Cpath%20d%3D'M0%2012%20L-5%207%20L-18%203%20L-7%20-2%20L-16%20-13%20L-5%20-10%20L0%20-23%20L5%20-10%20L16%20-13%20L7%20-2%20L18%203%20L5%207%20Z'%20fill%3D'%23c4301a'%20fill-opacity%3D'0.28'%2F%3E%3Cpath%20d%3D'M0%2012%20L0%2018'%20stroke%3D'%23c4301a'%20stroke-opacity%3D'0.28'%20stroke-width%3D'1.4'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+  background-size: var(--pattern-size);
+  background-position: 0 0;
+}
+
+/* 【B】抽象CSS版（軽量・点描）------------------------------
+   使うときは上の【A】body::before を丸ごとコメントアウトし、
+   下の body::before のコメントを外してください。
+------------------------------------------------------------
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: var(--pattern-opacity);
+
+  background-image:
+    repeating-linear-gradient(90deg, rgba(122,100,80,0.05) 0 1px, transparent 1px 9px),
+    radial-gradient(circle at 50px 60px,  rgba(210,84,31,0.10) 0 4px, transparent 5px),
+    radial-gradient(circle at 130px 120px, rgba(210,84,31,0.08) 0 3px, transparent 4px);
+  background-size: auto, 170px 170px, 170px 170px;
+}
+------------------------------------------------------------ */
+
+/* =========================================================
+   配色の適用（note本体のボタン・ナビを壊さない安全設計）
+   ・大枠は透明にして地色を活かす
+   ・記事本体／投稿エディタの中だけ紙色＋テーマ文字色にする
+   ・リンクはコントラストを確保した濃いめのテーマ色
+   ・note標準のボタン(投稿など)やヘッダー文字には手を入れない
+   ========================================================= */
+
+/* 大枠（ページ全体ラッパー）は透明に（地色・模様を見せる） */
+main,
+section,
+div[role="main"] {
+  background-color: transparent !important;
+}
+
+/* 記事本体・投稿エディタだけ紙色で不透明に（可読性確保） */
+article,
+[contenteditable="true"] {
+  background-color: var(--bg-paper) !important;
+}
+
+/* 記事・投稿エリアの文字色 */
+article,
+article p,
+article li,
+[contenteditable="true"],
+[contenteditable="true"] p,
+[contenteditable="true"] li {
+  color: var(--text-main) !important;
+}
+
+/* 見出し（記事内のみ） */
+article h1, article h2, article h3, article h4 {
+  color: var(--h-color) !important;
+}
+
+/* リンク（記事・投稿エリア内のみ／濃いめでコントラスト確保） */
+article a,
+[contenteditable="true"] a {
+  color: var(--link) !important;
+}
+
+/* 投稿欄・入力欄（書きやすさ重視） */
+textarea,
+input,
+[contenteditable="true"] {
+  background-color: var(--bg-paper) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-soft) !important;
+}
+
+/* 記事内の区切り線 */
+article hr {
+  border-color: var(--border-soft) !important;
+}
+
+/* =========================================================
+   ■模様を薄く → --pattern-opacity を 0.2 などに ／ ■消す → 0
+   ■もっと集中して書きたい → note-focus-mode.css を別途ONにする
+   ■note更新で崩れた時 → body::before の z-index:-1 / inset:0 を確認
+   ========================================================= */

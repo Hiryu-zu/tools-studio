@@ -1,0 +1,29 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body, #app {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #04060f;
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif;
+}
+
+.gds-canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  touch-action: none;
+}
+
+/* Tweakpane を右上に固定 */
+.tp-dfwv {
+  position: fixed !important;
+  top: 16px;
+  right: 16px;
+  width: 280px;
+  z-index: 10;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* モーション過敏配慮: 既定で控えめにしたい場合の足がかり */
+}

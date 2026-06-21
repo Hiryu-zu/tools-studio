@@ -1,0 +1,21 @@
+{
+  "name": "generative-design-studio",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "ジェネラティブ・インタラクティブ背景エフェクトのスタジオ（水面リップル / 星の軌跡 ほか）",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/three": "^0.169.0",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.8"
+  },
+  "dependencies": {
+    "three": "^0.169.0",
+    "tweakpane": "^4.0.5"
+  }
+}

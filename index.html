@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>便利＆ユニークツール集</title>
+<style>
+  :root{
+    --bg:#0e1116; --card:#181d26; --card2:#1f2633;
+    --text:#e8edf4; --sub:#9aa7b8; --accent:#5db0ff; --line:#2a3140;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    background:radial-gradient(1200px 600px at 50% -10%,#1a2333,#0e1116 60%);
+    color:var(--text); -webkit-font-smoothing:antialiased; min-height:100vh;
+  }
+  header{padding:40px 20px 12px; text-align:center;}
+  h1{font-size:1.5rem; margin:0 0 6px; letter-spacing:.02em;}
+  header p{margin:0; color:var(--sub); font-size:.9rem;}
+  main{max-width:680px; margin:0 auto; padding:16px 16px 48px;}
+  .grid{display:grid; gap:14px;}
+  a.card{
+    display:block; text-decoration:none; color:inherit;
+    background:linear-gradient(160deg,var(--card),var(--card2));
+    border:1px solid var(--line); border-radius:16px; padding:18px 18px;
+    transition:transform .12s ease, border-color .12s ease;
+  }
+  a.card:active{transform:scale(.985);}
+  a.card:hover{border-color:var(--accent);}
+  .card h2{margin:0 0 6px; font-size:1.1rem; display:flex; align-items:center; gap:10px;}
+  .card p{margin:0; color:var(--sub); font-size:.86rem; line-height:1.5;}
+  .ico{font-size:1.25rem; line-height:1;}
+  .tag{
+    display:inline-block; margin-top:10px; font-size:.72rem; color:var(--accent);
+    border:1px solid var(--line); border-radius:999px; padding:3px 10px;
+  }
+  footer{text-align:center; color:var(--sub); font-size:.75rem; padding:8px 20px 40px;}
+  footer code{background:#0008; padding:2px 6px; border-radius:6px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>便利＆ユニークツール集</h1>
+  <p>スマホからそのまま動かせる成果物の一覧</p>
+</header>
+<main>
+  <div class="grid">
+
+    <a class="card" href="./sites/star-trail/">
+      <h2><span class="ico">✦</span>星の軌跡アニメーション</h2>
+      <p>夜空に星の軌跡が流れるアニメーション背景。</p>
+      <span class="tag">動くサイト</span>
+    </a>
+
+    <a class="card" href="./sites/water-ripple/">
+      <h2><span class="ico">🌊</span>水面リップル背景エフェクト</h2>
+      <p>マウス／タッチ操作で波紋が広がるWebGL背景エフェクト。</p>
+      <span class="tag">動くサイト</span>
+    </a>
+
+    <a class="card" href="./sites/aspect-ratio-tool/">
+      <h2><span class="ico">🖼️</span>画像比率変換ツール</h2>
+      <p>画像のアスペクト比を変換・調整するツール。</p>
+      <span class="tag">動くサイト</span>
+    </a>
+
+    <a class="card" href="./sites/generative-design-studio/">
+      <h2><span class="ico">🎨</span>Generative Design Studio</h2>
+      <p>禅の砂紋・星景・雷など、複数のジェネラティブ背景を切り替えて楽しめるスタジオ。</p>
+      <span class="tag">動くサイト</span>
+    </a>
+
+  </div>
+</main>
+<footer>
+  GitHub Pages で公開。更新は <code>git push</code> するだけ。
+</footer>
+</body>
+</html>

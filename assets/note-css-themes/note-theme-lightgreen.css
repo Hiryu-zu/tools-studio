@@ -1,0 +1,136 @@
+/* =========================================================
+   note.com 自作テーマ ／ 薄緑色テーマ（基本3色 - 2）
+   ---------------------------------------------------------
+   コンセプト：若葉の机。鮮やかな緑で、読書・学習・思考整理向け。
+   用途    ：読書メモ・学習メモ・思考整理・長文執筆・目を休めたいとき。
+   使い方  ：Stylus に貼り付け、適用先を note.com に設定。
+   ---------------------------------------------------------
+   ■色は :root の変数 ／ 模様の濃さ=--pattern-opacity（0で消える）
+     模様の大きさ=--pattern-size
+   ■模様は初期状態で「具体的なSVG絵柄（若葉（葉脈つき））」が有効です。
+     軽量な抽象版に戻したい場合は body::before の【A】【B】を切替。
+   ========================================================= */
+
+:root {
+  --bg-main:    #eefce6;  /* 背景色（ページ全体） */
+  --bg-paper:   #fbfff7;  /* 本文カード色（記事エリア） */
+  --bg-soft:    #d9f3c9;  /* 補助背景色 */
+  --text-main:  #1f3320;  /* 本文文字色（薄くしすぎ注意） */
+  --text-sub:   #4f7a4a;  /* サブ文字色 */
+  --accent:     #3fa84f;  /* リンク・アクセント色 */
+  --accent-soft:#bfe9ad;  /* 淡いアクセント */
+  --border-soft:#cdeabc;  /* 枠線色 */
+  --h-color:    #2e7d36;  /* 見出し色（コントラスト確保） */
+  --link:       #277a31;  /* リンク色（AA基準を満たす濃いめ） */
+
+  --pattern-opacity: 0.8;  /* 模様の濃さ 0=消える */
+  --pattern-size: 150px 150px;  /* 模様タイルの大きさ */
+}
+
+html,
+body {
+  background-color: var(--bg-main) !important;
+  color: var(--text-main) !important;
+}
+
+/* =========================================================
+   模様レイヤー（【A】【B】はどちらか一方だけ有効に）
+   初期状態：【A】具体的SVG版が有効 ／ 【B】抽象CSS版はコメントアウト
+   ========================================================= */
+
+/* 【A】具体的SVG版（若葉（葉脈つき））★初期有効★ -------------- */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: var(--pattern-opacity);
+
+  background-color: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'150'%20height%3D'150'%20viewBox%3D'0%200%20150%20150'%3E%3Cg%20fill%3D'none'%20stroke%3D'%233aa14a'%20stroke-width%3D'1.5'%3E%3Cg%20transform%3D'translate%2828%2C34%29%20rotate%2820%29'%20stroke-opacity%3D'0.55'%3E%3Cpath%20d%3D'M0%200%20C%209%20-7%2022%20-5%2027%209%20C%2014%2013%201%2011%200%200%20Z'%20fill%3D'%233aa14a'%20fill-opacity%3D'0.18'%2F%3E%3Cpath%20d%3D'M1%201%20L24%207'%2F%3E%3Cpath%20d%3D'M6%203%20L9%20-1'%2F%3E%3Cpath%20d%3D'M12%205%20L16%201'%2F%3E%3Cpath%20d%3D'M18%207%20L22%204'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate%2898%2C96%29%20rotate%28-35%29%20scale%280.85%29'%20stroke-opacity%3D'0.5'%3E%3Cpath%20d%3D'M0%200%20C%209%20-7%2022%20-5%2027%209%20C%2014%2013%201%2011%200%200%20Z'%20fill%3D'%233aa14a'%20fill-opacity%3D'0.14'%2F%3E%3Cpath%20d%3D'M1%201%20L24%207'%2F%3E%3Cpath%20d%3D'M8%204%20L12%200'%2F%3E%3Cpath%20d%3D'M15%206%20L19%203'%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+  background-size: var(--pattern-size);
+  background-position: 0 0;
+}
+
+/* 【B】抽象CSS版（軽量・点描）------------------------------
+   使うときは上の【A】body::before を丸ごとコメントアウトし、
+   下の body::before のコメントを外してください。
+------------------------------------------------------------
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: var(--pattern-opacity);
+
+  background-image:
+    radial-gradient(ellipse at center, rgba(63,168,79,0.12) 0 8px, transparent 9px),
+    radial-gradient(ellipse at center, rgba(63,168,79,0.08) 0 5px, transparent 6px);
+  background-size: 140px 100px;
+  background-position: 20px 20px, 80px 60px;
+}
+------------------------------------------------------------ */
+
+/* =========================================================
+   配色の適用（note本体のボタン・ナビを壊さない安全設計）
+   ・大枠は透明にして地色を活かす
+   ・記事本体／投稿エディタの中だけ紙色＋テーマ文字色にする
+   ・リンクはコントラストを確保した濃いめのテーマ色
+   ・note標準のボタン(投稿など)やヘッダー文字には手を入れない
+   ========================================================= */
+
+/* 大枠（ページ全体ラッパー）は透明に（地色・模様を見せる） */
+main,
+section,
+div[role="main"] {
+  background-color: transparent !important;
+}
+
+/* 記事本体・投稿エディタだけ紙色で不透明に（可読性確保） */
+article,
+[contenteditable="true"] {
+  background-color: var(--bg-paper) !important;
+}
+
+/* 記事・投稿エリアの文字色 */
+article,
+article p,
+article li,
+[contenteditable="true"],
+[contenteditable="true"] p,
+[contenteditable="true"] li {
+  color: var(--text-main) !important;
+}
+
+/* 見出し（記事内のみ） */
+article h1, article h2, article h3, article h4 {
+  color: var(--h-color) !important;
+}
+
+/* リンク（記事・投稿エリア内のみ／濃いめでコントラスト確保） */
+article a,
+[contenteditable="true"] a {
+  color: var(--link) !important;
+}
+
+/* 投稿欄・入力欄（書きやすさ重視） */
+textarea,
+input,
+[contenteditable="true"] {
+  background-color: var(--bg-paper) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-soft) !important;
+}
+
+/* 記事内の区切り線 */
+article hr {
+  border-color: var(--border-soft) !important;
+}
+
+/* =========================================================
+   ■模様を薄く → --pattern-opacity を 0.2 などに ／ ■消す → 0
+   ■もっと集中して書きたい → note-focus-mode.css を別途ONにする
+   ■note更新で崩れた時 → body::before の z-index:-1 / inset:0 を確認
+   ========================================================= */

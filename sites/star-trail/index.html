@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星の軌跡アニメーション</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #04060f;
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif;
+  }
+  #sky { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
+
+  /* 設定パネル */
+  .panel {
+    position: fixed; top: 16px; right: 16px; z-index: 10;
+    color: #eef2ff; font-size: 14px;
+  }
+  .panel-toggle {
+    width: 40px; height: 40px; border-radius: 50%; border: none;
+    background: rgba(20, 28, 50, 0.55); color: #eef2ff; font-size: 18px;
+    cursor: pointer; backdrop-filter: blur(6px); transition: background 0.2s; float: right;
+  }
+  .panel-toggle:hover { background: rgba(30, 40, 70, 0.85); }
+  .panel-body {
+    margin-top: 8px; width: 250px; padding: 16px; border-radius: 12px;
+    background: rgba(16, 22, 42, 0.6); backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    display: flex; flex-direction: column; gap: 12px;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .panel.collapsed .panel-body {
+    opacity: 0; transform: translateY(-8px); pointer-events: none; position: absolute;
+  }
+  .panel-body h1 { font-size: 15px; font-weight: 600; line-height: 1.4; }
+  .panel-body .hint { font-size: 12px; opacity: 0.7; line-height: 1.5; }
+  .field { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .field span { font-size: 13px; opacity: 0.9; }
+  .field input[type="range"] { flex: 1; max-width: 120px; accent-color: #8fb4ff; }
+  .field input[type="checkbox"] { accent-color: #8fb4ff; width: 16px; height: 16px; }
+  .row { display: flex; gap: 8px; }
+  .btn {
+    flex: 1; border: 1px solid rgba(255, 255, 255, 0.3); background: transparent;
+    color: #eef2ff; padding: 8px 10px; border-radius: 8px; cursor: pointer;
+    font-size: 13px; transition: background 0.2s;
+  }
+  .btn:hover { background: rgba(255, 255, 255, 0.12); }
+</style>
+</head>
+<body>
+  <canvas id="sky"></canvas>
+
+  <div id="panel" class="panel">
+    <button id="panelToggle" class="panel-toggle" type="button" aria-label="設定を開閉">☆</button>
+    <div class="panel-body">
+      <h1>星の軌跡アニメーション</h1>
+      <p class="hint">画面クリックで極（回転の中心）を移動できます</p>
+
+      <label class="field">
+        <span>回転速度</span>
+        <input type="range" id="speed" min="0.01" max="0.5" step="0.01" value="0.1">
+      </label>
+      <label class="field">
+        <span>星の数</span>
+        <input type="range" id="count" min="100" max="2500" step="50" value="800">
+      </label>
+      <label class="field">
+        <span>軌跡の長さ</span>
+        <input type="range" id="trail" min="0" max="1" step="0.01" value="0.82">
+      </label>
+      <label class="field">
+        <span>極の位置 X</span>
+        <input type="range" id="poleX" min="0" max="1" step="0.01" value="0.72">
+      </label>
+      <label class="field">
+        <span>極の位置 Y</span>
+        <input type="range" id="poleY" min="0" max="1" step="0.01" value="0.58">
+      </label>
+      <label class="field">
+        <span>きらめき</span>
+        <input type="checkbox" id="twinkle" checked>
+      </label>
+
+      <div class="row">
+        <button id="pauseBtn" class="btn" type="button">一時停止</button>
+        <button id="clearBtn" class="btn" type="button">軌跡をクリア</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    const canvas = document.getElementById('sky');
+    const ctx = canvas.getContext('2d');
+
+    // 背景色（夜空のごく暗い藍色）。軌跡はこの色に向かって減衰する
+    const BG = [5, 7, 18];
+    const BG_STR = 'rgb(' + BG[0] + ',' + BG[1] + ',' + BG[2] + ')';
+
+    const params = {
+      speed: 0.1,    // 天球の角速度 (rad/秒) — 全星共通＝剛体回転
+      count: 800,
+      trail: 0.82,   // 0(短い)〜1(長い)。フェード量に変換
+      poleX: 0.72,   // 極の位置（画面比 0〜1）
+      poleY: 0.58,
+      twinkle: true,
+      running: true,
+    };
+
+    let W = 0, H = 0, DPR = 1;
+    let stars = [];
+    const pole = { x: 0, y: 0 };
+
+    // 軌跡の長さスライダー → 1フレームあたりのフェード量
+    // 長いほどフェードを小さく（消えにくく）する
+    function fadeAlpha() {
+      const t = params.trail;
+      // t=0 → 0.12(短い), t=1 → 0.004(とても長い) を指数的に補間
+      return 0.12 * Math.pow(0.004 / 0.12, t);
+    }
+
+    function updatePole() {
+      pole.x = params.poleX * W;
+      pole.y = params.poleY * H;
+    }
+
+    function maxRadius() {
+      const corners = [[0, 0], [W, 0], [0, H], [W, H]];
+      let m = 0;
+      for (let i = 0; i < corners.length; i++) {
+        m = Math.max(m, Math.hypot(corners[i][0] - pole.x, corners[i][1] - pole.y));
+      }
+      return m;
+    }
+
+    function makeStars() {
+      stars = [];
+      const maxR = maxRadius();
+      for (let i = 0; i < params.count; i++) {
+        // 面積一様になるよう r は sqrt(乱数) で分布
+        const r = maxR * Math.sqrt(Math.random());
+        const theta = Math.random() * Math.PI * 2;
+        const bright = Math.pow(Math.random(), 2.2); // 暗い星が多く、明るい星は少数
+        const isBig = bright > 0.95;
+        const size = (isBig ? (1.6 + Math.random() * 1.6) : (0.5 + Math.random() * 1.0)) * DPR;
+        // 色味: 大半は白、一部は青白・暖色
+        const c = Math.random();
+        let col;
+        if (c < 0.7) col = [255, 255, 255];
+        else if (c < 0.88) col = [185, 208, 255];
+        else col = [255, 224, 188];
+        stars.push({
+          r: r, theta: theta,
+          base: 0.3 + bright * 0.7,
+          size: size, big: isBig, col: col,
+          phase: Math.random() * Math.PI * 2,
+          tw: 0.5 + Math.random() * 2.2,
+        });
+      }
+    }
+
+    function fillBackground() {
+      ctx.fillStyle = BG_STR;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    function resize() {
+      DPR = Math.min(window.devicePixelRatio || 1, 2);
+      W = canvas.width = Math.floor(window.innerWidth * DPR);
+      H = canvas.height = Math.floor(window.innerHeight * DPR);
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      updatePole();
+      makeStars();
+      fillBackground();
+    }
+
+    let last = performance.now();
+    function frame(now) {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+
+      if (params.running) {
+        // 半透明の背景色で全面を塗る → 既存の描画が少しずつ背景色へ薄れて尾になる
+        ctx.fillStyle = 'rgba(' + BG[0] + ',' + BG[1] + ',' + BG[2] + ',' + fadeAlpha() + ')';
+        ctx.fillRect(0, 0, W, H);
+
+        const dtheta = params.speed * dt;
+        for (let i = 0; i < stars.length; i++) {
+          const s = stars[i];
+          s.theta += dtheta;
+          const x = pole.x + s.r * Math.cos(s.theta);
+          const y = pole.y + s.r * Math.sin(s.theta);
+
+          let a = s.base;
+          if (params.twinkle) a *= 0.78 + 0.22 * Math.sin(now / 1000 * s.tw + s.phase);
+          const col = s.col;
+
+          if (s.big) {
+            // 明るい星はほのかなグロー付き
+            const gr = s.size * 3.2;
+            const g = ctx.createRadialGradient(x, y, 0, x, y, gr);
+            g.addColorStop(0, 'rgba(' + col[0] + ',' + col[1] + ',' + col[2] + ',' + a + ')');
+            g.addColorStop(0.4, 'rgba(' + col[0] + ',' + col[1] + ',' + col[2] + ',' + (a * 0.5) + ')');
+            g.addColorStop(1, 'rgba(' + col[0] + ',' + col[1] + ',' + col[2] + ',0)');
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(x, y, gr, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            ctx.fillStyle = 'rgba(' + col[0] + ',' + col[1] + ',' + col[2] + ',' + a + ')';
+            ctx.beginPath();
+            ctx.arc(x, y, s.size, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+
+    // -------------------------------------------------------------------
+    // UI
+    // -------------------------------------------------------------------
+    const $ = function (id) { return document.getElementById(id); };
+    const panel = $('panel'), panelToggle = $('panelToggle');
+    const speedEl = $('speed'), countEl = $('count'), trailEl = $('trail');
+    const poleXEl = $('poleX'), poleYEl = $('poleY'), twinkleEl = $('twinkle');
+    const pauseBtn = $('pauseBtn'), clearBtn = $('clearBtn');
+
+    panelToggle.addEventListener('click', function () { panel.classList.toggle('collapsed'); });
+
+    speedEl.addEventListener('input', function () { params.speed = parseFloat(speedEl.value); });
+    trailEl.addEventListener('input', function () { params.trail = parseFloat(trailEl.value); });
+    twinkleEl.addEventListener('change', function () { params.twinkle = twinkleEl.checked; });
+
+    countEl.addEventListener('input', function () {
+      params.count = parseInt(countEl.value, 10);
+      makeStars();
+    });
+
+    function onPoleChange() {
+      params.poleX = parseFloat(poleXEl.value);
+      params.poleY = parseFloat(poleYEl.value);
+      updatePole();
+      makeStars();
+      fillBackground();
+    }
+    poleXEl.addEventListener('input', onPoleChange);
+    poleYEl.addEventListener('input', onPoleChange);
+
+    pauseBtn.addEventListener('click', function () {
+      params.running = !params.running;
+      pauseBtn.textContent = params.running ? '一時停止' : '再生';
+    });
+    clearBtn.addEventListener('click', fillBackground);
+
+    // クリックで極を移動（パネル上のクリックは無視）
+    canvas.addEventListener('pointerdown', function (e) {
+      params.poleX = Math.min(1, Math.max(0, e.clientX / window.innerWidth));
+      params.poleY = Math.min(1, Math.max(0, e.clientY / window.innerHeight));
+      poleXEl.value = params.poleX;
+      poleYEl.value = params.poleY;
+      updatePole();
+      makeStars();
+      fillBackground();
+    });
+
+    window.addEventListener('resize', resize);
+
+    resize();
+    requestAnimationFrame(frame);
+  })();
+  </script>
+</body>
+</html>

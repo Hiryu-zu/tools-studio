@@ -1,0 +1,85 @@
+/* =========================================================
+   note.com 執筆集中モード（どのテーマにも重ねて使えます）
+   ---------------------------------------------------------
+   使い方：
+     ・Stylus に「別のスタイル」として登録してください
+       （季節テーマとは別に作る）。
+     ・適用先は同じく note.com。
+     ・季節テーマは有効のまま、このスタイルを ON にすると
+       「集中モード」、OFF にすると通常表示に戻ります。
+     ・後から読み込ませるため、テーマの模様や装飾を上書きして
+       静かな書き心地にします（!important 多めです）。
+   ---------------------------------------------------------
+   集中モードでやること：
+     1. 背景の季節模様を消す（body::before を非表示）
+     2. 地色を無地のやわらかい紙色にする
+     3. 本文・エディタを広め＆行間ゆったりにする
+     4. 見出し下線などの飾りを外す
+   ========================================================= */
+
+:root {
+  /* 集中モードの地色（お好みで変更可） */
+  --focus-bg:    #fbfbf9;  /* ページ地色（ごく淡い生成り） */
+  --focus-paper: #ffffff;  /* 本文・エディタの紙色 */
+  --focus-text:  #2a2a2a;  /* 本文文字色 */
+  --focus-line:  1.95;     /* 行間（大きいほどゆったり） */
+}
+
+/* 1) 季節模様レイヤーを消す -------------------------------- */
+body::before {
+  background-image: none !important;
+  opacity: 0 !important;
+}
+
+/* 2) 地色を無地に ----------------------------------------- */
+html,
+body {
+  background-color: var(--focus-bg) !important;
+  background-image: none !important;
+}
+
+/* 3) 本文・エディタを読みやすく --------------------------- */
+article,
+main,
+section,
+div[role="main"] {
+  background-color: var(--focus-paper) !important;
+  color: var(--focus-text) !important;
+}
+
+article p,
+section p,
+[contenteditable="true"],
+textarea {
+  line-height: var(--focus-line) !important;
+  letter-spacing: 0.01em !important;
+  color: var(--focus-text) !important;
+}
+
+/* 本文カードの横幅を少し広げてゆったり（崩れる場合はこの3行を削除） */
+article,
+.note-common-styles__textnote-body {
+  max-width: 760px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* 4) 余計な飾りを外す ------------------------------------- */
+h1, h2, h3, h4 {
+  border-bottom: none !important;  /* 冬テーマの赤椿下線なども解除 */
+  padding-bottom: 0 !important;
+}
+
+/* 入力欄を白く落ち着かせる -------------------------------- */
+textarea,
+input,
+[contenteditable="true"] {
+  background-color: var(--focus-paper) !important;
+  border-color: #e6e6e6 !important;
+}
+
+/* =========================================================
+   ■行間をもっと広げたい → --focus-line を 2.1 などに
+   ■紙幅を元に戻したい   → 「本文カードの横幅」ブロックを削除
+   ■地色を変えたい       → --focus-bg / --focus-paper を変更
+   ========================================================= */

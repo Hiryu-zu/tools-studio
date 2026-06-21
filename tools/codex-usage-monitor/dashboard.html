@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code / Codex 使用量ダッシュボード</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#171c24; --panel2:#1f2630; --border:#2a323d;
+    --text:#e6edf3; --muted:#8b97a6; --accent:#6ea8fe;
+    --claude:#d18a4e; --codex:#10a37f; --warn:#e5534b;
+    --c1:#6ea8fe; --c2:#10a37f; --c3:#d18a4e; --c4:#a371f7; --c5:#e3b341; --c6:#56d4dd;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
+    background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+  header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;
+    align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  h1{font-size:18px;margin:0;font-weight:600}
+  h1 .sub{color:var(--muted);font-weight:400;font-size:13px;margin-left:10px}
+  .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  button,label.btn{background:var(--panel2);color:var(--text);border:1px solid var(--border);
+    border-radius:8px;padding:7px 12px;cursor:pointer;font-size:13px}
+  button:hover,label.btn:hover{border-color:var(--accent)}
+  .wrap{padding:20px 24px;max-width:1280px;margin:0 auto}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
+  .card .k{color:var(--muted);font-size:12px;margin-bottom:6px}
+  .card .v{font-size:24px;font-weight:600}
+  .card .x{color:var(--muted);font-size:12px;margin-top:4px}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;overflow:hidden}
+  .panel h2{font-size:14px;margin:0 0 14px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .panel h2 .badge{font-size:11px;color:var(--muted);font-weight:400}
+  .col-12{grid-column:span 12}.col-8{grid-column:span 8}.col-6{grid-column:span 6}.col-4{grid-column:span 4}
+  @media(max-width:880px){.col-8,.col-6,.col-4{grid-column:span 12}}
+  canvas{display:block;width:100%}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--border)}
+  th{color:var(--muted);font-weight:500;font-size:12px}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle}
+  .pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px}
+  .pill.claude{background:rgba(209,138,78,.18);color:var(--claude)}
+  .pill.codex{background:rgba(16,163,127,.18);color:var(--codex)}
+  .drop{border:2px dashed var(--border);border-radius:14px;padding:54px;text-align:center;color:var(--muted)}
+  .drop.over{border-color:var(--accent);background:var(--panel2)}
+  .empty{color:var(--muted);padding:18px;text-align:center}
+  .bar-track{background:var(--panel2);border-radius:6px;height:8px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:6px}
+  .foot{color:var(--muted);font-size:12px;margin:26px 0 10px;text-align:center}
+  .tip{position:fixed;background:#0a0d12;border:1px solid var(--border);border-radius:8px;
+    padding:7px 10px;font-size:12px;pointer-events:none;opacity:0;transition:opacity .08s;z-index:50;white-space:nowrap}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Claude Code / Codex 使用量ダッシュボード<span class="sub" id="genAt"></span></h1>
+  <div class="toolbar">
+    <label class="btn">JSON読込<input type="file" id="file" accept=".json" hidden></label>
+    <button id="demo">デモデータ</button>
+    <button id="reload">再読込</button>
+  </div>
+</header>
+<div class="wrap" id="app"></div>
+<div class="tip" id="tip"></div>
+
+<!--EMBED_DATA-->
+<script>
+"use strict";
+/* =========================================================================
+   ユーティリティ
+   ========================================================================= */
+const $ = sel => document.querySelector(sel);
+const fmt = n => (n==null?'-':Math.round(n).toLocaleString());
+const fmtK = n => { n=n||0; if(n>=1e9)return (n/1e9).toFixed(2)+'B';
+  if(n>=1e6)return (n/1e6).toFixed(2)+'M'; if(n>=1e3)return (n/1e3).toFixed(1)+'K'; return ''+Math.round(n); };
+const usd = n => '$'+(n||0).toFixed(2);
+const bytes = n => { n=n||0; const u=['B','KB','MB','GB','TB']; let i=0;
+  while(n>=1024&&i<u.length-1){n/=1024;i++;} return n.toFixed(i?1:0)+' '+u[i]; };
+const TOOL_COLOR = {claude_code:'var(--claude)', codex:'var(--codex)'};
+const TOOL_LABEL = {claude_code:'Claude Code', codex:'Codex'};
+const SERIES = ['var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)','var(--c6)'];
+const cssVar = v => v.startsWith('var(') ? getComputedStyle(document.body)
+  .getPropertyValue(v.slice(4,-1)).trim() : v;
+
+const tip = $('#tip');
+function showTip(html,x,y){tip.innerHTML=html;tip.style.opacity=1;
+  tip.style.left=(x+12)+'px';tip.style.top=(y+12)+'px';}
+function hideTip(){tip.style.opacity=0;}
+
+/* 高DPI対応の canvas 準備 */
+function prep(canvas,h){
+  const dpr=window.devicePixelRatio||1, w=canvas.clientWidth||canvas.parentElement.clientWidth;
+  canvas.width=w*dpr; canvas.height=h*dpr; canvas.style.height=h+'px';
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  return {ctx,w,h};
+}
+
+/* =========================================================================
+   汎用チャート（依存ゼロ・canvas）
+   ========================================================================= */
+function stackedBar(canvas, labels, series, opts={}){
+  const h=opts.height||260; const {ctx,w}=prep(canvas,h);
+  const padL=54,padR=12,padT=12,padB=42;
+  const cw=w-padL-padR, ch=h-padT-padB;
+  const totals=labels.map((_,i)=>series.reduce((s,se)=>s+(se.data[i]||0),0));
+  const max=Math.max(1,...totals);
+  ctx.strokeStyle=cssVar('var(--border)'); ctx.fillStyle=cssVar('var(--muted)');
+  ctx.font='11px Segoe UI'; ctx.textAlign='right';
+  for(let g=0;g<=4;g++){const y=padT+ch-ch*g/4; const val=max*g/4;
+    ctx.strokeStyle=cssVar('var(--border)');ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(w-padR,y);ctx.stroke();
+    ctx.fillText(fmtK(val),padL-6,y+3);}
+  const n=labels.length, bw=Math.min(46,cw/n*0.7), step=cw/n;
+  const rects=[];
+  labels.forEach((lb,i)=>{
+    let y0=padT+ch; const x=padL+step*i+step/2-bw/2;
+    series.forEach((se,si)=>{
+      const v=se.data[i]||0; if(v<=0)return;
+      const bh=ch*v/max; y0-=bh;
+      ctx.fillStyle=cssVar(se.color||SERIES[si%SERIES.length]);
+      ctx.fillRect(x,y0,bw,bh);
+      rects.push({x,y:y0,w:bw,h:bh,label:lb,name:se.name,val:v});
+    });
+    ctx.fillStyle=cssVar('var(--muted)');ctx.textAlign='center';ctx.font='10px Segoe UI';
+    const short=n>14?(i%Math.ceil(n/10)===0?lb.slice(5):''):lb.slice(5);
+    ctx.fillText(short,padL+step*i+step/2,h-padB+16);
+  });
+  hookHover(canvas,rects,r=>`<b>${r.label}</b><br>${r.name}: ${fmt(r.val)}`);
+}
+
+function hbar(canvas, items, opts={}){
+  const rowH=opts.rowH||26, h=items.length*rowH+10; const {ctx,w}=prep(canvas,h);
+  const padL=opts.padL||130, padR=60;
+  const max=Math.max(1,...items.map(d=>d.value));
+  const rects=[];
+  items.forEach((d,i)=>{
+    const y=i*rowH+5, bw=(w-padL-padR)*d.value/max;
+    ctx.fillStyle=cssVar('var(--text)');ctx.font='12px Segoe UI';ctx.textAlign='right';
+    ctx.fillText(d.label.length>20?d.label.slice(0,19)+'…':d.label,padL-8,y+rowH/2+1);
+    ctx.fillStyle=cssVar(d.color||SERIES[i%SERIES.length]);
+    roundRect(ctx,padL,y+4,Math.max(2,bw),rowH-12,4);ctx.fill();
+    ctx.fillStyle=cssVar('var(--muted)');ctx.textAlign='left';
+    ctx.fillText(opts.fmt?opts.fmt(d.value):fmtK(d.value),padL+bw+6,y+rowH/2+1);
+    rects.push({x:padL,y:y+4,w:Math.max(2,bw),h:rowH-12,label:d.label,val:d.value,raw:d});
+  });
+  hookHover(canvas,rects,r=>`<b>${r.label}</b><br>${opts.tip?opts.tip(r.raw):fmt(r.val)}`);
+}
+
+function donut(canvas, items, opts={}){
+  const h=opts.height||200; const {ctx,w}=prep(canvas,h);
+  const cx=w/2, cy=h/2, R=Math.min(w,h)/2-8, r=R*0.6;
+  const total=items.reduce((s,d)=>s+d.value,0)||1;
+  let a=-Math.PI/2; const segs=[];
+  items.forEach((d,i)=>{
+    const ang=2*Math.PI*d.value/total;
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R,a,a+ang);ctx.closePath();
+    ctx.fillStyle=cssVar(d.color||SERIES[i%SERIES.length]);ctx.fill();
+    segs.push({a0:a,a1:a+ang,cx,cy,R,r,label:d.label,val:d.value,pct:d.value/total});
+    a+=ang;
+  });
+  ctx.fillStyle=cssVar('var(--panel)');ctx.beginPath();ctx.arc(cx,cy,r,0,7);ctx.fill();
+  ctx.fillStyle=cssVar('var(--text)');ctx.textAlign='center';ctx.font='600 18px Segoe UI';
+  ctx.fillText(opts.center||fmtK(total),cx,cy+2);
+  ctx.fillStyle=cssVar('var(--muted)');ctx.font='11px Segoe UI';
+  ctx.fillText(opts.centerSub||'合計',cx,cy+18);
+  canvas.onmousemove=e=>{
+    const rc=canvas.getBoundingClientRect();const mx=e.clientX-rc.left,my=e.clientY-rc.top;
+    const dx=mx-cx,dy=my-cy,dist=Math.hypot(dx,dy);let ang=Math.atan2(dy,dx);
+    if(ang< -Math.PI/2)ang+=2*Math.PI;let hit=null;
+    if(dist<=R&&dist>=r)for(const s of segs)if(ang>=s.a0&&ang<s.a1){hit=s;break;}
+    if(hit)showTip(`<b>${hit.label}</b><br>${fmt(hit.val)} (${(hit.pct*100).toFixed(1)}%)`,e.clientX,e.clientY);
+    else hideTip();
+  };
+  canvas.onmouseleave=hideTip;
+}
+
+function roundRect(ctx,x,y,w,h,r){r=Math.min(r,h/2,w/2);ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+function hookHover(canvas,rects,html){
+  canvas.onmousemove=e=>{
+    const rc=canvas.getBoundingClientRect();const mx=e.clientX-rc.left,my=e.clientY-rc.top;
+    const hit=rects.find(r=>mx>=r.x&&mx<=r.x+r.w&&my>=r.y&&my<=r.y+r.h);
+    if(hit)showTip(html(hit),e.clientX,e.clientY); else hideTip();
+  };
+  canvas.onmouseleave=hideTip;
+}
+
+/* =========================================================================
+   パネル・レジストリ（拡張ポイント）
+   新しい指標を足すときは registerPanel({...}) を呼ぶだけ。
+   render(el, data) 内で好きに描画できる。data が無いキーは graceful に無視。
+   ========================================================================= */
+const PANELS = [];
+function registerPanel(p){ PANELS.push(p); }
+
+/* --- 日別トークン（ツール別スタック） --- */
+registerPanel({
+  id:'daily', col:'col-8', title:'日別トークン使用量', badge:'ツール別スタック',
+  has:d=>d.daily&&d.daily.length,
+  render(el,d){
+    const byDate={};
+    d.daily.forEach(r=>{(byDate[r.date]=byDate[r.date]||{})[r.tool]=r.total;});
+    const labels=Object.keys(byDate).sort();
+    const tools=[...new Set(d.daily.map(r=>r.tool))];
+    const series=tools.map(t=>({name:TOOL_LABEL[t]||t,color:TOOL_COLOR[t]||'var(--c1)',
+      data:labels.map(l=>byDate[l][t]||0)}));
+    const cv=document.createElement('canvas');el.appendChild(cv);
+    stackedBar(cv,labels,series);
+    el.insertAdjacentHTML('beforeend', legend(series.map(s=>({label:s.name,color:s.color}))));
+  }
+});
+
+/* --- ツール構成（ドーナツ） --- */
+registerPanel({
+  id:'split', col:'col-4', title:'ツール別構成', badge:'トークン比率',
+  has:d=>d.totals&&d.totals.by_tool,
+  render(el,d){
+    const items=Object.entries(d.totals.by_tool).map(([t,v],i)=>({
+      label:TOOL_LABEL[t]||t,value:v.total,color:TOOL_COLOR[t]||SERIES[i]}));
+    const cv=document.createElement('canvas');el.appendChild(cv);
+    donut(cv,items,{center:fmtK(d.totals.total),centerSub:'総トークン'});
+    el.insertAdjacentHTML('beforeend', legend(items));
+  }
+});
+
+/* --- モデル別内訳 --- */
+registerPanel({
+  id:'models', col:'col-6', title:'モデル別内訳', badge:'トークン / コスト',
+  has:d=>d.models&&d.models.length,
+  render(el,d){
+    const rows=d.models.slice(0,12).map(m=>`<tr>
+      <td><span class="pill ${m.tool}">${TOOL_LABEL[m.tool]||m.tool}</span> ${esc(m.model)}</td>
+      <td class="num">${fmt(m.total)}</td>
+      <td class="num">${usd(m.cost)}</td></tr>`).join('');
+    el.insertAdjacentHTML('beforeend',
+      `<table><thead><tr><th>モデル</th><th class="num">トークン</th><th class="num">概算$</th></tr></thead>
+      <tbody>${rows}</tbody></table>`);
+  }
+});
+
+/* --- ツール使用回数（Claude Code） --- */
+registerPanel({
+  id:'tools', col:'col-6', title:'ツール使用回数', badge:'Claude Code tool_use',
+  has:d=>d.tools_used&&d.tools_used.length,
+  render(el,d){
+    const items=d.tools_used.slice(0,10).map((t,i)=>({label:t.name,value:t.count,color:SERIES[i%SERIES.length]}));
+    const cv=document.createElement('canvas');el.appendChild(cv);
+    hbar(cv,items,{fmt:v=>fmt(v)+'回'});
+  }
+});
+
+/* --- メモリ / システム --- */
+registerPanel({
+  id:'system', col:'col-6', title:'メモリ / システム', badge:'実行時スナップショット',
+  has:d=>d.system,
+  render(el,d){
+    const s=d.system;
+    if(!s.found){el.insertAdjacentHTML('beforeend',
+      `<div class="empty">${esc(s.note||'システム情報なし')}</div>`);return;}
+    const m=s.memory||{};
+    el.insertAdjacentHTML('beforeend',`
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px">
+          <span>メモリ ${m.percent||0}% 使用</span><span>${bytes(m.used)} / ${bytes(m.total)}</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${m.percent||0}%;
+          background:${(m.percent||0)>85?'var(--warn)':'var(--accent)'}"></div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px">
+        <span>CPU ${s.cpu_percent||0}% (${s.cpu_count||'?'} コア)</span></div>
+      <div class="bar-track" style="margin-bottom:14px"><div class="bar-fill"
+        style="width:${s.cpu_percent||0}%;background:var(--c2)"></div></div>`);
+    const procs=(s.processes||[]).filter(p=>p.rss>0).slice(0,8);
+    if(procs.length){
+      const items=procs.map(p=>({label:`${p.label||p.name} (${p.pid})`,value:p.rss,
+        color:(p.label==='claude')?'var(--claude)':(p.label==='codex')?'var(--codex)':'var(--c4)'}));
+      const cv=document.createElement('canvas');el.appendChild(cv);
+      hbar(cv,items,{padL:150,fmt:bytes,tip:r=>bytes(r.value)});
+    }
+  }
+});
+
+/* --- セッション上位 --- */
+registerPanel({
+  id:'sessions', col:'col-12', title:'セッション上位', badge:'トークン量順',
+  has:d=>d.sessions&&d.sessions.length,
+  render(el,d){
+    const rows=d.sessions.slice(0,15).map(s=>`<tr>
+      <td><span class="pill ${s.tool}">${TOOL_LABEL[s.tool]||s.tool}</span></td>
+      <td>${esc(s.date||'-')}</td>
+      <td style="max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+        title="${esc(s.cwd||'')}">${esc(shortPath(s.cwd)||s.id.slice(0,18))}</td>
+      <td class="num">${fmt(s.messages)}</td>
+      <td class="num">${fmt(s.total)}</td>
+      <td class="num">${usd(s.cost)}</td></tr>`).join('');
+    el.insertAdjacentHTML('beforeend',
+      `<table><thead><tr><th>ツール</th><th>日付</th><th>プロジェクト/ID</th>
+       <th class="num">メッセージ</th><th class="num">トークン</th><th class="num">概算$</th></tr></thead>
+       <tbody>${rows}</tbody></table>`);
+  }
+});
+
+/* =========================================================================
+   描画
+   ========================================================================= */
+function legend(items){
+  return '<div class="legend">'+items.map(i=>
+    `<span><i style="background:${cssVar(i.color)}"></i>${esc(i.label)}</span>`).join('')+'</div>';
+}
+function esc(s){return (s==null?'':''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function shortPath(p){if(!p)return '';const parts=(''+p).split(/[\\\/]/).filter(Boolean);
+  return parts.slice(-2).join('/');}
+
+function summaryCards(d){
+  const t=d.totals||{}; const cc=d.sources?.claude_code||{}; const cx=d.sources?.codex||{};
+  const cards=[
+    {k:'総トークン',v:fmtK(t.total||0),x:`${fmt(t.input)} in / ${fmt(t.output)} out`},
+    {k:'概算コスト',v:usd(t.cost||0),x:'PRICINGテーブル基準'},
+    {k:'セッション数',v:fmt(t.sessions||0),x:`${fmt(t.messages||0)} メッセージ`},
+    {k:'Claude Code',v:fmtK(t.by_tool?.claude_code?.total||0),x:`${cc.sessions||0} セッション`},
+    {k:'Codex',v:fmtK(t.by_tool?.codex?.total||0),x:`${cx.sessions||0} セッション`},
+  ];
+  return '<div class="cards">'+cards.map(c=>
+    `<div class="card"><div class="k">${c.k}</div><div class="v">${c.v}</div><div class="x">${esc(c.x)}</div></div>`
+  ).join('')+'</div>';
+}
+
+function render(d){
+  CURRENT=d;
+  $('#genAt').textContent = d.generatedAt ? '生成: '+d.generatedAt : '';
+  const app=$('#app');
+  const active=PANELS.filter(p=>{try{return p.has(d);}catch(e){return false;}});
+  if(!active.length){ renderEmpty(); return; }
+  let html=summaryCards(d)+'<div class="grid" id="grid"></div>';
+  app.innerHTML=html;
+  const grid=$('#grid');
+  active.forEach(p=>{
+    const el=document.createElement('div');
+    el.className='panel '+(p.col||'col-6');
+    el.innerHTML=`<h2>${esc(p.title)}<span class="badge">${esc(p.badge||'')}</span></h2>`;
+    grid.appendChild(el);
+    try{ p.render(el,d); }catch(e){ el.insertAdjacentHTML('beforeend',
+      `<div class="empty">描画エラー: ${esc(e.message)}</div>`); }
+  });
+  app.insertAdjacentHTML('beforeend',
+    `<div class="foot">${esc(d.pricing_note||'')} ・ collect.py で再生成できます</div>`);
+}
+
+function renderEmpty(){
+  $('#app').innerHTML=`
+    <div class="drop" id="drop">
+      <p style="font-size:16px;color:var(--text);margin:0 0 8px">usage_data.json をここにドラッグ&ドロップ</p>
+      <p>または右上の「JSON読込」から選択 ／ 「デモデータ」で表示を確認</p>
+      <p style="margin-top:18px;font-size:12px">データ生成: <code>python collect.py</code>（同じフォルダで実行）</p>
+    </div>`;
+  const drop=$('#drop');
+  ['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
+  drop.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)loadFile(f);});
+}
+
+/* =========================================================================
+   データ読込
+   ========================================================================= */
+let CURRENT=null;
+function loadFile(file){
+  const r=new FileReader();
+  r.onload=()=>{try{render(JSON.parse(r.result));}catch(e){alert('JSON解析エラー: '+e.message);}};
+  r.readAsText(file);
+}
+window.addEventListener('dragover',e=>e.preventDefault());
+window.addEventListener('drop',e=>{e.preventDefault();
+  if(!CURRENT&&e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0]);});
+$('#file').addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0]);});
+$('#demo').addEventListener('click',()=>render(demoData()));
+$('#reload').addEventListener('click',()=>{ if(CURRENT)render(CURRENT); else boot(); });
+window.addEventListener('resize',()=>{ if(CURRENT){clearTimeout(window._rz);
+  window._rz=setTimeout(()=>render(CURRENT),150);} });
+
+/* =========================================================================
+   デモデータ
+   ========================================================================= */
+function demoData(){
+  const days=14, daily=[]; const today=new Date();
+  for(let i=days-1;i>=0;i--){
+    const dte=new Date(today); dte.setDate(dte.getDate()-i);
+    const ds=dte.toISOString().slice(0,10);
+    const cc=Math.round(80000+Math.random()*420000), cx=Math.round(20000+Math.random()*240000);
+    daily.push({date:ds,tool:'claude_code',input:cc*0.2|0,output:cc*0.1|0,cache_read:cc*0.6|0,
+      cache_write:cc*0.1|0,reasoning:0,total:cc,cost:+(cc/1e6*4).toFixed(3),messages:20+(Math.random()*60|0),sessions:1+(Math.random()*4|0)});
+    daily.push({date:ds,tool:'codex',input:cx*0.5|0,output:cx*0.2|0,cache_read:cx*0.2|0,
+      cache_write:0,reasoning:cx*0.1|0,total:cx,cost:+(cx/1e6*5).toFixed(3),messages:10+(Math.random()*30|0),sessions:1+(Math.random()*3|0)});
+  }
+  const sum=(t,k)=>daily.filter(r=>r.tool===t).reduce((s,r)=>s+r[k],0);
+  return {
+    generatedAt:new Date().toISOString().slice(0,19),
+    pricing_note:'これはデモデータです。実データは collect.py で生成してください。',
+    sources:{claude_code:{found:true,files:42,sessions:18},codex:{found:true,files:23,sessions:11}},
+    totals:{input:daily.reduce((s,r)=>s+r.input,0),output:daily.reduce((s,r)=>s+r.output,0),
+      total:daily.reduce((s,r)=>s+r.total,0),cost:+daily.reduce((s,r)=>s+r.cost,0).toFixed(2),
+      sessions:29,messages:daily.reduce((s,r)=>s+r.messages,0),
+      by_tool:{claude_code:{total:sum('claude_code','total'),cost:0,sessions:18},
+               codex:{total:sum('codex','total'),cost:0,sessions:11}}},
+    daily,
+    models:[
+      {model:'claude-opus-4',tool:'claude_code',total:2600000,cost:38.4,messages:340},
+      {model:'claude-sonnet-4',tool:'claude_code',total:1800000,cost:9.2,messages:520},
+      {model:'gpt-5-codex',tool:'codex',total:1500000,cost:11.1,messages:280},
+      {model:'gpt-5',tool:'codex',total:420000,cost:3.0,messages:90}],
+    tools_used:[{name:'Edit',count:312},{name:'Read',count:298},{name:'Bash',count:201},
+      {name:'Grep',count:142},{name:'Write',count:96},{name:'TodoWrite',count:64}],
+    sessions:[
+      {id:'demo-sess-aaaa',tool:'claude_code',date:daily[13].date,cwd:'C:/work/my-app',messages:88,total:640000,cost:9.1},
+      {id:'demo-sess-bbbb',tool:'codex',date:daily[12].date,cwd:'C:/work/api',messages:54,total:410000,cost:3.2},
+      {id:'demo-sess-cccc',tool:'claude_code',date:daily[10].date,cwd:'C:/work/site',messages:41,total:280000,cost:2.4}],
+    system:{found:true,timestamp:new Date().toISOString(),cpu_percent:34,cpu_count:8,
+      memory:{total:34359738368,used:21474836480,available:12884901888,percent:62},
+      processes:[{name:'node',label:'claude',pid:18244,rss:880000000},
+        {name:'node',label:'codex',pid:20133,rss:540000000},
+        {name:'node',label:'node',pid:9921,rss:210000000}]}
+  };
+}
+
+/* =========================================================================
+   起動：埋め込みデータ → なければ空表示
+   ========================================================================= */
+function boot(){
+  const embed=document.getElementById('embedded-data');
+  if(embed){
+    try{ const d=JSON.parse(embed.textContent); if(d&&Object.keys(d).length){render(d);return;} }catch(e){}
+  }
+  renderEmpty();
+}
+boot();
+</script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude / Codex 残量モニタ</title>
+<style>
+  :root{
+    --bg:#0d1017; --panel:#161b23; --panel2:#1d242e; --border:#283039;
+    --text:#e8eef4; --muted:#8c98a6;
+    --claude:#d18a4e; --codex:#10a37f;
+    --good:#3fb950; --warn:#d29922; --bad:#f85149;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:"Segoe UI",system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
+    background:radial-gradient(1200px 600px at 50% -10%,#19222e 0%,var(--bg) 60%);
+    color:var(--text);font-size:15px;-webkit-font-smoothing:antialiased}
+  header{display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:16px 26px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+  h1{font-size:17px;margin:0;font-weight:600;letter-spacing:.2px}
+  .meta{color:var(--muted);font-size:13px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--good);display:inline-block;
+    box-shadow:0 0 0 0 rgba(63,185,80,.6);animation:pulse 2.4s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(63,185,80,.5)}70%{box-shadow:0 0 0 7px rgba(63,185,80,0)}100%{box-shadow:0 0 0 0 rgba(63,185,80,0)}}
+  button{background:var(--panel2);color:var(--text);border:1px solid var(--border);
+    border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px}
+  button:hover{border-color:var(--muted)}
+  .wrap{max-width:1100px;margin:0 auto;padding:26px}
+  .providers{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media(max-width:780px){.providers{grid-template-columns:1fr}}
+  .prov{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px 22px}
+  .prov-head{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .prov-head .name{font-size:18px;font-weight:700}
+  .prov-head .accent{width:12px;height:12px;border-radius:4px}
+  .plan{margin-left:auto;font-size:12px;color:var(--muted);border:1px solid var(--border);
+    padding:2px 9px;border-radius:20px}
+  .win{margin-bottom:18px}
+  .win:last-child{margin-bottom:0}
+  .win-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+  .win-label{font-size:13px;color:var(--muted)}
+  .win-rem{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+  .win-rem small{font-size:14px;font-weight:600;color:var(--muted);margin-left:3px}
+  .track{height:14px;border-radius:9px;background:var(--panel2);overflow:hidden;
+    border:1px solid var(--border)}
+  .fill{height:100%;border-radius:9px 0 0 9px;transition:width .6s ease}
+  .win-foot{display:flex;justify-content:space-between;margin-top:7px;font-size:12.5px;color:var(--muted)}
+  .win-foot .reset{font-variant-numeric:tabular-nums}
+  .err{color:var(--bad);font-size:12.5px;margin-top:4px}
+  .stale{color:var(--warn)}
+  .note{color:var(--muted);font-size:12px;text-align:center;margin-top:26px;line-height:1.7}
+  .big-empty{color:var(--muted);text-align:center;padding:60px 20px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Claude / Codex 残量モニタ</h1>
+  <div class="meta">
+    <span><span class="dot" id="dot"></span> <span id="updated">—</span></span>
+    <button id="pause">⏸ 自動更新中</button>
+    <button id="refresh">↻ 更新</button>
+  </div>
+</header>
+<div class="wrap">
+  <div class="providers" id="providers"></div>
+  <div class="note" id="note">
+    残り％は <code>state.json</code> を自動取得して表示します。<code>python monitor.py</code> で起動してください。<br>
+    値は非公開エンドポイント由来の概算です（5時間枠／週枠）。
+  </div>
+</div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const ACCENT={claude:'var(--claude)',codex:'var(--codex)'};
+let paused=false, timer=null, ticker=null, LAST=null;
+
+function colorFor(rem){ // 残り％ → 色
+  if(rem==null) return 'var(--muted)';
+  if(rem>=40) return 'var(--good)';
+  if(rem>=15) return 'var(--warn)';
+  return 'var(--bad)';
+}
+function fmtRemain(ms){
+  if(ms==null||isNaN(ms)) return '—';
+  if(ms<=0) return 'まもなくリセット';
+  const m=Math.floor(ms/60000), d=Math.floor(m/1440), h=Math.floor((m%1440)/60), mm=m%60;
+  if(d>0) return `${d}日${h}時間`;
+  if(h>0) return `${h}時間${mm}分`;
+  return `${mm}分`;
+}
+function clockOf(iso){
+  if(!iso) return '';
+  const dt=new Date(iso); if(isNaN(dt)) return '';
+  const now=new Date();
+  const sameDay=dt.toDateString()===now.toDateString();
+  const hh=String(dt.getHours()).padStart(2,'0'), mi=String(dt.getMinutes()).padStart(2,'0');
+  return sameDay? `${hh}:${mi}` : `${dt.getMonth()+1}/${dt.getDate()} ${hh}:${mi}`;
+}
+function esc(s){return (s==null?'':''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function render(state){
+  LAST=state;
+  $('#updated').textContent = state.updated ? '更新 '+clockOfFull(state.updated) : '—';
+  const provs=state.providers||{};
+  const order=['claude','codex'];
+  const keys=[...new Set([...order.filter(k=>provs[k]), ...Object.keys(provs)])];
+  const root=$('#providers');
+  if(!keys.length){ root.innerHTML='<div class="big-empty">データ待ち… monitor.py を起動してください</div>'; return; }
+  root.innerHTML = keys.map(k=>provCard(k,provs[k])).join('');
+  updateCountdowns();
+}
+function clockOfFull(iso){const d=new Date(iso);if(isNaN(d))return iso;
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;}
+
+function provCard(key,p){
+  p=p||{}; const acc=ACCENT[key]||'var(--muted)';
+  const wins=(p.windows||[]).map(w=>winRow(w)).join('');
+  const planTxt = p.plan? esc(p.plan) : '';
+  let status='';
+  if(p.stale) status=`<div class="err stale">⚠ 前回値を表示中（${esc(p.error||'再取得待ち')}）</div>`;
+  else if(!p.ok) status=`<div class="err">⚠ ${esc(p.error||'取得失敗')}</div>`;
+  return `<div class="prov">
+    <div class="prov-head">
+      <span class="accent" style="background:${acc}"></span>
+      <span class="name">${esc(p.label||key)}</span>
+      ${planTxt?`<span class="plan">${planTxt}</span>`:''}
+    </div>
+    ${wins||'<div class="err">'+esc(p.error||'枠データなし')+'</div>'}
+    ${status}
+  </div>`;
+}
+function winRow(w){
+  const rem=w.remaining; const col=colorFor(rem);
+  const pct=(rem==null?0:Math.max(0,Math.min(100,rem)));
+  return `<div class="win" data-reset="${w.resets_at||''}">
+    <div class="win-top">
+      <span class="win-label">${esc(w.label)}枠</span>
+      <span class="win-rem" style="color:${col}">${rem==null?'—':rem}<small>% 残り</small></span>
+    </div>
+    <div class="track"><div class="fill" style="width:${pct}%;background:${col}"></div></div>
+    <div class="win-foot">
+      <span>使用 ${w.utilization==null?'—':w.utilization}%</span>
+      <span class="reset" data-reset="${w.resets_at||''}">リセットまで <b class="cd">—</b>${w.resets_at?` ／ ${clockOf(w.resets_at)}`:''}</span>
+    </div>
+  </div>`;
+}
+function updateCountdowns(){
+  const now=Date.now();
+  document.querySelectorAll('.reset').forEach(el=>{
+    const iso=el.getAttribute('data-reset'); const cd=el.querySelector('.cd');
+    if(!iso){if(cd)cd.textContent='—';return;}
+    const ms=new Date(iso).getTime()-now;
+    if(cd) cd.textContent=fmtRemain(ms);
+  });
+}
+
+async function fetchState(){
+  try{
+    const r=await fetch('state.json?_='+Date.now(),{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    render(await r.json());
+    $('#dot').style.background='var(--good)';
+  }catch(e){
+    $('#dot').style.background='var(--bad)';
+    if(!LAST){ // file:// などで取得不可 → デモ表示
+      $('#note').innerHTML='⚠ state.json を取得できませんでした。<code>python monitor.py</code> で起動し localhost 経由で開いてください。下はデモ表示です。';
+      render(demoState());
+    }
+  }
+}
+function demoState(){
+  const n=Date.now(); const iso=m=>new Date(n+m*60000).toISOString();
+  const win=(k,l,u,m)=>({key:k,label:l,utilization:u,remaining:Math.round((100-u)*10)/10,resets_at:iso(m),window_mins:0});
+  return {updated:new Date().toISOString(),providers:{
+    claude:{name:'claude',label:'Claude Code',ok:true,plan:'Pro',windows:[win('5h','5時間',73,63),win('7d','週',10,60*24*6+240)]},
+    codex:{name:'codex',label:'Codex',ok:true,plan:'plus',windows:[win('5h','5時間',16,259),win('7d','週',2,60*24*6+23*60)]}
+  }};
+}
+
+function startTimers(){
+  clearInterval(timer); clearInterval(ticker);
+  timer=setInterval(()=>{ if(!paused) fetchState(); }, 30000); // 30秒ごとに再取得
+  ticker=setInterval(updateCountdowns, 1000);                  // 毎秒カウントダウン
+}
+$('#pause').addEventListener('click',()=>{
+  paused=!paused;
+  $('#pause').textContent = paused? '▶ 一時停止中' : '⏸ 自動更新中';
+  $('#dot').style.animationPlayState = paused?'paused':'running';
+  if(!paused) fetchState();
+});
+$('#refresh').addEventListener('click',fetchState);
+
+fetchState();
+startTimers();
+</script>
+</body>
+</html>

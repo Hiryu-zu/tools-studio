@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>note テーマ プレビュー</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif; background:#2b2b2b; color:#222; }
+  .switcher { position:sticky; top:0; z-index:100; display:flex; flex-wrap:wrap; gap:6px; align-items:center;
+    padding:12px 16px; background:#1f1f1f; border-bottom:1px solid #000; }
+  .switcher button { cursor:pointer; border:1px solid #555; background:#333; color:#eee; border-radius:999px; padding:6px 14px; font-size:13px; }
+  .switcher button.active { background:#eee; color:#111; border-color:#eee; }
+  .sep { width:1px; height:22px; background:#555; margin:0 4px; }
+  #focusBtn.on { background:#ffd23f; color:#3a2a00; border-color:#ffd23f; }
+  .hint { color:#999; font-size:12px; padding:6px 16px 14px; background:#1f1f1f; }
+
+  .stage { position:relative; min-height:80vh; padding:48px 16px 80px;
+    background-color:var(--bg-main,#fff); color:var(--text-main,#222); overflow:hidden; }
+  .stage::before { content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+    opacity:var(--pattern-opacity,0.5); background-image:var(--pattern-image,none); background-size:var(--pattern-bgsize,120px 120px); }
+  .article { position:relative; z-index:1; max-width:640px; margin:0 auto;
+    background-color:var(--bg-paper,#fff); border:1px solid var(--border-soft,#eee); border-radius:10px;
+    padding:40px 44px 48px; box-shadow:0 8px 30px rgba(0,0,0,0.12); transition:max-width .2s; }
+  .article h1 { color:var(--h-color,#333); font-size:26px; margin:0 0 6px; }
+  .article .meta { color:var(--text-sub,#888); font-size:13px; margin-bottom:24px; }
+  .article h2 { color:var(--h-color,#333); font-size:19px; margin:28px 0 10px; }
+  .article p { line-height:1.9; margin:0 0 16px; color:var(--text-main,#222); }
+  .article a { color:var(--accent,#08c); }
+  .article .thumb { height:150px; border-radius:8px; margin:8px 0 24px; background:linear-gradient(120deg,#9aa,#cbd,#abc); }
+  .article .editbox { margin-top:24px; padding:12px 14px; border-radius:8px; background-color:var(--bg-paper,#fff);
+    border:1px solid var(--border-soft,#ddd); color:var(--text-sub,#888); font-size:14px; }
+  .article hr { border:none; border-top:1px solid var(--border-soft,#eee); margin:28px 0; }
+
+  /* ===== テーマ定義（具体的SVG模様を使用）===== */
+.stage[data-theme="pink"] {
+      --bg-main:#fff1f4; --bg-paper:#fffafb; --text-main:#3a2329; --text-sub:#8a4f5c;
+      --accent:#e85a82; --border-soft:#f6cdd8; --h-color:#c23a63;
+      --pattern-opacity:0.6; --pattern-bgsize:170px 170px;
+      --pattern-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'170'%20height%3D'170'%20viewBox%3D'0%200%20170%20170'%3E%3Cdefs%3E%3Cpath%20id%3D'pt'%20d%3D'M0%200%20C%20-4%20-4%20-5%20-10%20-1.6%20-13%20L0%20-11%20L1.6%20-13%20C%205%20-10%204%20-4%200%200%20Z'%2F%3E%3C%2Fdefs%3E%3Cg%20fill%3D'%23e85a82'%3E%3Cg%20transform%3D'translate%2842%2C46%29%20scale%281.15%29'%20fill-opacity%3D'0.3'%3E%3Cuse%20href%3D'%23pt'%20transform%3D'rotate%280%29'%2F%3E%3Cuse%20href%3D'%23pt'%20transform%3D'rotate%2872%29'%2F%3E%3Cuse%20href%3D'%23pt'%20transform%3D'rotate%28144%29'%2F%3E%3Cuse%20href%3D'%23pt'%20transform%3D'rotate%28216%29'%2F%3E%3Cuse%20href%3D'%23pt'%20transform%3D'rotate%28288%29'%2F%3E%3Ccircle%20r%3D'2.2'%20fill%3D'%23ffd23f'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate%28126%2C118%29%20scale%280.9%29'%20fill-opacity%3D'0.24'%3E%3Cuse%20href%3D'%23pt'%20transform%3D'rotate%280%29'%2F%3E%3Cuse%20href%3D'%23pt'%20transform%3D'rotate%2872%29'%2F%3E%3Cuse%20href%3D'%23pt'%20transform%3D'rotate%28144%29'%2F%3E%3Cuse%20href%3D'%23pt'%20transform%3D'rotate%28216%29'%2F%3E%3Cuse%20href%3D'%23pt'%20transform%3D'rotate%28288%29'%2F%3E%3Ccircle%20r%3D'2.2'%20fill%3D'%23ffd23f'%2F%3E%3C%2Fg%3E%3Cuse%20href%3D'%23pt'%20transform%3D'translate%28132%2C40%29%20rotate%2840%29%20scale%280.8%29'%20fill-opacity%3D'0.22'%2F%3E%3Cuse%20href%3D'%23pt'%20transform%3D'translate%2852%2C128%29%20rotate%28-25%29%20scale%280.7%29'%20fill-opacity%3D'0.20'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+.stage[data-theme="lightgreen"] {
+      --bg-main:#eefce6; --bg-paper:#fbfff7; --text-main:#1f3320; --text-sub:#4f7a4a;
+      --accent:#3fa84f; --border-soft:#cdeabc; --h-color:#2e7d36;
+      --pattern-opacity:0.5; --pattern-bgsize:150px 150px;
+      --pattern-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'150'%20height%3D'150'%20viewBox%3D'0%200%20150%20150'%3E%3Cg%20fill%3D'none'%20stroke%3D'%233aa14a'%20stroke-width%3D'1.5'%3E%3Cg%20transform%3D'translate%2828%2C34%29%20rotate%2820%29'%20stroke-opacity%3D'0.55'%3E%3Cpath%20d%3D'M0%200%20C%209%20-7%2022%20-5%2027%209%20C%2014%2013%201%2011%200%200%20Z'%20fill%3D'%233aa14a'%20fill-opacity%3D'0.18'%2F%3E%3Cpath%20d%3D'M1%201%20L24%207'%2F%3E%3Cpath%20d%3D'M6%203%20L9%20-1'%2F%3E%3Cpath%20d%3D'M12%205%20L16%201'%2F%3E%3Cpath%20d%3D'M18%207%20L22%204'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate%2898%2C96%29%20rotate%28-35%29%20scale%280.85%29'%20stroke-opacity%3D'0.5'%3E%3Cpath%20d%3D'M0%200%20C%209%20-7%2022%20-5%2027%209%20C%2014%2013%201%2011%200%200%20Z'%20fill%3D'%233aa14a'%20fill-opacity%3D'0.14'%2F%3E%3Cpath%20d%3D'M1%201%20L24%207'%2F%3E%3Cpath%20d%3D'M8%204%20L12%200'%2F%3E%3Cpath%20d%3D'M15%206%20L19%203'%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+.stage[data-theme="blue"] {
+      --bg-main:#e8f5ff; --bg-paper:#f8fdff; --text-main:#13303f; --text-sub:#3f7494;
+      --accent:#1f93e0; --border-soft:#bfe3f8; --h-color:#1b6fac;
+      --pattern-opacity:0.5; --pattern-bgsize:90px 44px;
+      --pattern-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'90'%20height%3D'44'%20viewBox%3D'0%200%2090%2044'%3E%3Cg%20fill%3D'none'%20stroke-linecap%3D'round'%3E%3Cpath%20d%3D'M0%2012%20c%207.5%20-5%2015%20-5%2022.5%200%20c%207.5%205%2015%205%2022.5%200%20c%207.5%20-5%2015%20-5%2022.5%200%20c%207.5%205%2015%205%2022.5%200'%20stroke%3D'%231f93e0'%20stroke-opacity%3D'0.45'%20stroke-width%3D'1.6'%2F%3E%3Cpath%20d%3D'M0%2026%20c%207.5%20-5%2015%20-5%2022.5%200%20c%207.5%205%2015%205%2022.5%200%20c%207.5%20-5%2015%20-5%2022.5%200%20c%207.5%205%2015%205%2022.5%200'%20stroke%3D'%231f93e0'%20stroke-opacity%3D'0.32'%20stroke-width%3D'1.6'%2F%3E%3Cpath%20d%3D'M0%2040%20c%207.5%20-5%2015%20-5%2022.5%200%20c%207.5%205%2015%205%2022.5%200%20c%207.5%20-5%2015%20-5%2022.5%200%20c%207.5%205%2015%205%2022.5%200'%20stroke%3D'%231f93e0'%20stroke-opacity%3D'0.22'%20stroke-width%3D'1.6'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+.stage[data-theme="autumn"] {
+      --bg-main:#fbefd9; --bg-paper:#fffbf2; --text-main:#36261a; --text-sub:#8a6a48;
+      --accent:#d2541f; --border-soft:#e7cfa8; --h-color:#b8431a;
+      --pattern-opacity:0.55; --pattern-bgsize:175px 175px;
+      --pattern-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'175'%20height%3D'175'%20viewBox%3D'0%200%20175%20175'%3E%3Cg%20transform%3D'translate%2846%2C48%29%20rotate%2812%29%20scale%281.05%29'%3E%3Cpath%20d%3D'M0%2012%20L-5%207%20L-18%203%20L-7%20-2%20L-16%20-13%20L-5%20-10%20L0%20-23%20L5%20-10%20L16%20-13%20L7%20-2%20L18%203%20L5%207%20Z'%20fill%3D'%23cf2f18'%20fill-opacity%3D'0.34'%2F%3E%3Cpath%20d%3D'M0%2012%20L0%2018'%20stroke%3D'%23cf2f18'%20stroke-opacity%3D'0.34'%20stroke-width%3D'1.4'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate%28128%2C118%29%20rotate%28-26%29%20scale%280.85%29'%3E%3Cpath%20d%3D'M0%2012%20L-5%207%20L-18%203%20L-7%20-2%20L-16%20-13%20L-5%20-10%20L0%20-23%20L5%20-10%20L16%20-13%20L7%20-2%20L18%203%20L5%207%20Z'%20fill%3D'%23b8281a'%20fill-opacity%3D'0.3'%2F%3E%3Cpath%20d%3D'M0%2012%20L0%2018'%20stroke%3D'%23b8281a'%20stroke-opacity%3D'0.3'%20stroke-width%3D'1.4'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate%28150%2C42%29%20rotate%28160%29%20scale%280.62%29'%3E%3Cpath%20d%3D'M0%2012%20L-5%207%20L-18%203%20L-7%20-2%20L-16%20-13%20L-5%20-10%20L0%20-23%20L5%20-10%20L16%20-13%20L7%20-2%20L18%203%20L5%207%20Z'%20fill%3D'%23d83a1c'%20fill-opacity%3D'0.26'%2F%3E%3Cpath%20d%3D'M0%2012%20L0%2018'%20stroke%3D'%23d83a1c'%20stroke-opacity%3D'0.26'%20stroke-width%3D'1.4'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate%2850%2C134%29%20rotate%28-8%29%20scale%280.72%29'%3E%3Cpath%20d%3D'M0%2012%20L-5%207%20L-18%203%20L-7%20-2%20L-16%20-13%20L-5%20-10%20L0%20-23%20L5%20-10%20L16%20-13%20L7%20-2%20L18%203%20L5%207%20Z'%20fill%3D'%23c4301a'%20fill-opacity%3D'0.28'%2F%3E%3Cpath%20d%3D'M0%2012%20L0%2018'%20stroke%3D'%23c4301a'%20stroke-opacity%3D'0.28'%20stroke-width%3D'1.4'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+.stage[data-theme="winter"] {
+      --bg-main:#eef3fb; --bg-paper:#fbfdff; --text-main:#222d3b; --text-sub:#5a6b85;
+      --accent:#355f9e; --border-soft:#cfdbed; --h-color:#2c4a86;
+      --pattern-opacity:0.55; --pattern-bgsize:160px 160px;
+      --pattern-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'160'%20height%3D'160'%20viewBox%3D'0%200%20160%20160'%3E%3Cg%20transform%3D'translate%2840%2C42%29'%3E%3Cg%20stroke%3D'%23355f9e'%20stroke-opacity%3D'0.42'%20stroke-width%3D'1.2'%20fill%3D'none'%20stroke-linecap%3D'round'%3E%3Cg%20transform%3D'rotate%280%29'%3E%3Cline%20x1%3D'0'%20y1%3D'0'%20x2%3D'0'%20y2%3D'-17'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'-3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'-3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'-2.5'%20y2%3D'-8.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'2.5'%20y2%3D'-8.5'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'rotate%2860%29'%3E%3Cline%20x1%3D'0'%20y1%3D'0'%20x2%3D'0'%20y2%3D'-17'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'-3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'-3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'-2.5'%20y2%3D'-8.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'2.5'%20y2%3D'-8.5'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'rotate%28120%29'%3E%3Cline%20x1%3D'0'%20y1%3D'0'%20x2%3D'0'%20y2%3D'-17'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'-3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'-3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'-2.5'%20y2%3D'-8.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'2.5'%20y2%3D'-8.5'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'rotate%28180%29'%3E%3Cline%20x1%3D'0'%20y1%3D'0'%20x2%3D'0'%20y2%3D'-17'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'-3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'-3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'-2.5'%20y2%3D'-8.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'2.5'%20y2%3D'-8.5'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'rotate%28240%29'%3E%3Cline%20x1%3D'0'%20y1%3D'0'%20x2%3D'0'%20y2%3D'-17'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'-3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'-3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'-2.5'%20y2%3D'-8.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'2.5'%20y2%3D'-8.5'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'rotate%28300%29'%3E%3Cline%20x1%3D'0'%20y1%3D'0'%20x2%3D'0'%20y2%3D'-17'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'-3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'-3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'-2.5'%20y2%3D'-8.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'2.5'%20y2%3D'-8.5'%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fg%3E%3Cg%20transform%3D'translate%28122%2C108%29%20scale%280.72%29'%3E%3Cg%20stroke%3D'%23355f9e'%20stroke-opacity%3D'0.3'%20stroke-width%3D'1.4'%20fill%3D'none'%20stroke-linecap%3D'round'%3E%3Cg%20transform%3D'rotate%280%29'%3E%3Cline%20x1%3D'0'%20y1%3D'0'%20x2%3D'0'%20y2%3D'-17'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'-3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'-3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'-2.5'%20y2%3D'-8.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'2.5'%20y2%3D'-8.5'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'rotate%2860%29'%3E%3Cline%20x1%3D'0'%20y1%3D'0'%20x2%3D'0'%20y2%3D'-17'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'-3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'-3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'-2.5'%20y2%3D'-8.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'2.5'%20y2%3D'-8.5'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'rotate%28120%29'%3E%3Cline%20x1%3D'0'%20y1%3D'0'%20x2%3D'0'%20y2%3D'-17'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'-3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'-3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'-2.5'%20y2%3D'-8.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'2.5'%20y2%3D'-8.5'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'rotate%28180%29'%3E%3Cline%20x1%3D'0'%20y1%3D'0'%20x2%3D'0'%20y2%3D'-17'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'-3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'-3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'-2.5'%20y2%3D'-8.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'2.5'%20y2%3D'-8.5'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'rotate%28240%29'%3E%3Cline%20x1%3D'0'%20y1%3D'0'%20x2%3D'0'%20y2%3D'-17'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'-3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'-3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'-2.5'%20y2%3D'-8.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'2.5'%20y2%3D'-8.5'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'rotate%28300%29'%3E%3Cline%20x1%3D'0'%20y1%3D'0'%20x2%3D'0'%20y2%3D'-17'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'-3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-17'%20x2%3D'3.5'%20y2%3D'-21'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'-3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-11'%20x2%3D'3.5'%20y2%3D'-14.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'-2.5'%20y2%3D'-8.5'%2F%3E%3Cline%20x1%3D'0'%20y1%3D'-6'%20x2%3D'2.5'%20y2%3D'-8.5'%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fg%3E%3Cg%20transform%3D'translate%28124%2C40%29%20scale%281.0%29'%3E%3Ccircle%20cx%3D'9.0'%20cy%3D'0.0'%20r%3D'7.5'%20fill%3D'%23ffffff'%20fill-opacity%3D'0.9'%20stroke%3D'%239fb4d4'%20stroke-opacity%3D'0.6'%20stroke-width%3D'1'%2F%3E%3Ccircle%20cx%3D'2.8'%20cy%3D'8.6'%20r%3D'7.5'%20fill%3D'%23ffffff'%20fill-opacity%3D'0.9'%20stroke%3D'%239fb4d4'%20stroke-opacity%3D'0.6'%20stroke-width%3D'1'%2F%3E%3Ccircle%20cx%3D'-7.3'%20cy%3D'5.3'%20r%3D'7.5'%20fill%3D'%23ffffff'%20fill-opacity%3D'0.9'%20stroke%3D'%239fb4d4'%20stroke-opacity%3D'0.6'%20stroke-width%3D'1'%2F%3E%3Ccircle%20cx%3D'-7.3'%20cy%3D'-5.3'%20r%3D'7.5'%20fill%3D'%23ffffff'%20fill-opacity%3D'0.9'%20stroke%3D'%239fb4d4'%20stroke-opacity%3D'0.6'%20stroke-width%3D'1'%2F%3E%3Ccircle%20cx%3D'2.8'%20cy%3D'-8.6'%20r%3D'7.5'%20fill%3D'%23ffffff'%20fill-opacity%3D'0.9'%20stroke%3D'%239fb4d4'%20stroke-opacity%3D'0.6'%20stroke-width%3D'1'%2F%3E%3Ccircle%20r%3D'4.2'%20fill%3D'%23ffd23f'%20fill-opacity%3D'0.85'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate%2846%2C128%29%20scale%280.8%29'%3E%3Ccircle%20cx%3D'9.0'%20cy%3D'0.0'%20r%3D'7.5'%20fill%3D'%23ffffff'%20fill-opacity%3D'0.9'%20stroke%3D'%239fb4d4'%20stroke-opacity%3D'0.6'%20stroke-width%3D'1'%2F%3E%3Ccircle%20cx%3D'2.8'%20cy%3D'8.6'%20r%3D'7.5'%20fill%3D'%23ffffff'%20fill-opacity%3D'0.9'%20stroke%3D'%239fb4d4'%20stroke-opacity%3D'0.6'%20stroke-width%3D'1'%2F%3E%3Ccircle%20cx%3D'-7.3'%20cy%3D'5.3'%20r%3D'7.5'%20fill%3D'%23ffffff'%20fill-opacity%3D'0.9'%20stroke%3D'%239fb4d4'%20stroke-opacity%3D'0.6'%20stroke-width%3D'1'%2F%3E%3Ccircle%20cx%3D'-7.3'%20cy%3D'-5.3'%20r%3D'7.5'%20fill%3D'%23ffffff'%20fill-opacity%3D'0.9'%20stroke%3D'%239fb4d4'%20stroke-opacity%3D'0.6'%20stroke-width%3D'1'%2F%3E%3Ccircle%20cx%3D'2.8'%20cy%3D'-8.6'%20r%3D'7.5'%20fill%3D'%23ffffff'%20fill-opacity%3D'0.9'%20stroke%3D'%239fb4d4'%20stroke-opacity%3D'0.6'%20stroke-width%3D'1'%2F%3E%3Ccircle%20r%3D'4.2'%20fill%3D'%23ffd23f'%20fill-opacity%3D'0.85'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+
+  /* ===== 執筆集中モード（重ねて適用）===== */
+  .stage.focus::before { background-image:none !important; opacity:0 !important; }
+  .stage.focus { background-color:#fbfbf9 !important; }
+  .stage.focus .article { background:#fff !important; max-width:760px; border-color:#eee; }
+  .stage.focus .article h1, .stage.focus .article h2 { border-bottom:none; }
+  .stage.focus .article p, .stage.focus .article .editbox { line-height:2.05; color:#2a2a2a; }
+</style>
+</head>
+<body>
+  <div class="switcher" id="switcher">
+    <button data-t="pink">薄紅(基本)</button>
+    <button data-t="lightgreen">薄緑(基本)</button>
+    <button data-t="blue">水色(基本)</button>
+    <button data-t="autumn">秋・紅葉読書室</button>
+    <button data-t="winter">冬・雪灯り</button>
+    <span class="sep"></span>
+    <button id="focusBtn">✎ 執筆集中モード</button>
+  </div>
+  <div class="hint">※noteのモック画面です。実ファイルでは具体的なSVG模様が初期表示。集中モードは別CSS(note-focus-mode.css)としてON/OFFできます。</div>
+
+  <div class="stage" id="stage" data-theme="pink">
+    <article class="article">
+      <h1>桜の降る午後に、言葉を並べる</h1>
+      <div class="meta">氷野宮美咲 ・ 2026年6月16日 ・ 創作</div>
+      <div class="thumb"></div>
+      <p>窓のそばに机を寄せて、淡い光のなかで一行目を書きはじめる。背景の模様はうっすら残るくらいがちょうどよくて、文字の邪魔をしない。<a href="#">関連する記事へのリンク</a>もこの通り、テーマ色で表示される。</p>
+      <h2>本文の読みやすさを最優先に</h2>
+      <p>本文カードはほぼ不透明にしてあるので、背景に模様があっても文章はくっきり読める。見出し・サブ文字・リンク・枠線がそれぞれテーマカラーで整い、季節ごとに机の上の空気だけが入れ替わる感覚になる。</p>
+      <hr>
+      <p>下は投稿エディタのイメージ。入力欄も違和感なく色が揃う。</p>
+      <div class="editbox">ここに本文を入力…（textarea / contenteditable のイメージ）</div>
+    </article>
+  </div>
+
+  <script>
+    const stage=document.getElementById('stage');
+    const btns=[...document.querySelectorAll('#switcher button[data-t]')];
+    const focusBtn=document.getElementById('focusBtn');
+    function setActive(t){ stage.setAttribute('data-theme',t); btns.forEach(b=>b.classList.toggle('active',b.dataset.t===t)); }
+    btns.forEach(b=>b.addEventListener('click',()=>setActive(b.dataset.t)));
+    focusBtn.addEventListener('click',()=>{ const on=stage.classList.toggle('focus'); focusBtn.classList.toggle('on',on); });
+    setActive('pink');
+  </script>
+</body>
+</html>

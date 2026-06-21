@@ -1,0 +1,25 @@
+# --- 依存・ビルド中間物 ---
+node_modules/
+**/node_modules/
+dist/
+_jsbuild/
+.vite/
+*.local
+
+# --- OS / エディタ / 一時物 ---
+.DS_Store
+Thumbs.db
+desktop.ini
+__deltest.txt
+**/.writetest
+
+# --- 監視ツールの実行時出力（追跡しない） ---
+state.json
+**/state.json
+**/usage_data.json
+**/restart_log.txt
+
+# --- ロック中で移動できなかった旧フォルダ（監視ツール停止後に手動削除） ---
+/Claude-Codex残量モニタ/
+
+# 注: sites/ 配下のビルド済み成果物は公開対象なのでコミットする（無視しない）
